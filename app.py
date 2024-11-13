@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 from flask_cors import CORS
 from dotenv import load_dotenv
 import cloudinary
@@ -20,6 +20,22 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 load_dotenv()
 
+
+# MongoDB client setup within request context
+@app.before_request
+def before_request():
+    if "mongo_client" not in g:
+        g.mongo_client = MongoClient(os.getenv("MONGODB_URI"))
+        g.db = g.mongo_client[os.getenv("MONGO_DB")]
+
+
+@app.teardown_request
+def teardown_request(exception=None):
+    mongo_client = g.pop("mongo_client", None)
+    if mongo_client is not None:
+        mongo_client.close()
+
+
 cloudinary.config(
     cloud_name=os.getenv("CLOUD_NAME"),
     api_key=os.getenv("CLOUD_API_KEY"),
@@ -27,8 +43,8 @@ cloudinary.config(
     secure=True,
 )
 
-client = MongoClient(os.getenv("MONGODB_URI"))
-db = client[os.getenv("MONGO_DB")]
+# client = MongoClient(os.getenv("MONGODB_URI"))
+# db = client[os.getenv("MONGO_DB")]
 
 
 @app.route("/", methods=["GET"])
@@ -48,7 +64,7 @@ def submit_feedback():
     if feedback:
         time_added = datetime.now()
         feedback_entry = {"name": name, "feedback": feedback, "time_added": time_added}
-        db.feedbacks.insert_one(feedback_entry)
+        g.db.feedbacks.insert_one(feedback_entry)
         return (
             jsonify(
                 {
@@ -63,7 +79,7 @@ def submit_feedback():
 
 @app.route("/feedbacks", methods=["GET"])
 def get_feedbacks():
-    feedbacks = db.feedbacks.find()
+    feedbacks = g.db.feedbacks.find()
     return jsonify(
         [
             {
@@ -101,14 +117,14 @@ def upload_image():
         "get_expected_prediction": predictions,
         "time_added": time_added,
     }
-    db.predictionsinfo.insert_one(prediction_entry)
+    g.db.predictionsinfo.insert_one(prediction_entry)
 
     return jsonify({"url": image_url}), 200
 
 
 @app.route("/databasepredictions", methods=["GET"])
 def get_database_predictions():
-    predictions_info = db.predictionsinfo.find()
+    predictions_info = g.db.predictionsinfo.find()
     return jsonify(
         [
             {
@@ -147,14 +163,14 @@ def no_predictions_upload_image():
         "get_prediction": predictions,
         "time_added": time_added,
     }
-    db.nopredictionsinfo.insert_one(no_prediction_entry)
+    g.db.nopredictionsinfo.insert_one(no_prediction_entry)
 
     return jsonify({"url": image_url}), 200
 
 
 @app.route("/databasenopredictions", methods=["GET"])
 def get_database_no_predictions():
-    no_predictions_info = db.nopredictionsinfo.find()
+    no_predictions_info = g.db.nopredictionsinfo.find()
     return jsonify(
         [
             {
