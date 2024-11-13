@@ -16,7 +16,7 @@ from pymongo import MongoClient
 
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 load_dotenv()
 
