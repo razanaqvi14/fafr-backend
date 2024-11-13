@@ -30,6 +30,12 @@ cloudinary.config(
 client = MongoClient(os.getenv("MONGODB_URI"))
 db = client[os.getenv("MONGO_DB")]
 
+
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"status": "server is live"}), 200
+
+
 # FEEDBACK FORM
 
 
