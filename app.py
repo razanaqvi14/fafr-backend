@@ -13,8 +13,6 @@ from PIL import Image
 import numpy as np
 import io
 from pymongo import MongoClient
-import ssl
-import certifi
 
 
 app = Flask(__name__)
@@ -29,7 +27,7 @@ cloudinary.config(
     secure=True,
 )
 
-client = MongoClient(os.getenv("MONGODB_URI"), tlsCAFile=certifi.where())
+client = MongoClient(os.getenv("MONGODB_URI"))
 db = client[os.getenv("MONGO_DB")]
 
 # FEEDBACK FORM
