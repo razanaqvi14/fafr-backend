@@ -20,8 +20,6 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 load_dotenv()
 
-
-# MongoDB client setup within request context
 @app.before_request
 def before_request():
     if "mongo_client" not in g:
@@ -42,9 +40,6 @@ cloudinary.config(
     api_secret=os.getenv("CLOUD_API_SECRET"),
     secure=True,
 )
-
-# client = MongoClient(os.getenv("MONGODB_URI"))
-# db = client[os.getenv("MONGO_DB")]
 
 
 @app.route("/", methods=["GET"])
