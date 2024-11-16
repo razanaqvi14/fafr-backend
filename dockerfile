@@ -1,26 +1,24 @@
-# Use a Python version compatible with your dependencies
+# Use a stable Python base image
 FROM python:3.12-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
-    && apt-get clean
+    && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the requirements file first (for Docker caching)
+# Copy and install Python dependencies
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application files
+# Copy application files
 COPY . .
 
-# Expose the port your app runs on
+# Expose the app's port
 EXPOSE 5000
 
-# Command to run the application
+# Run the application
 CMD ["python", "app.py"]
